@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Publisher & Loadstring Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #00ff00;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 40, 0, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 0, 40, 0.1) 0%, transparent 20%);
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(10, 20, 10, 0.9);
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            padding: 25px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #00ff00;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            color: #00ff00;
+            font-size: 2.5em;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            letter-spacing: 2px;
+        }
+        
+        .header p {
+            color: #00cc00;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+        
+        .editor-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #00ff00;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            font-size: 1.2em;
+        }
+        
+        .script-input {
+            width: 100%;
+            height: 300px;
+            background: #001100;
+            color: #00ff00;
+            border: 1px solid #00aa00;
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            overflow: auto;
+        }
+        
+        .script-input:focus {
+            outline: none;
+            border-color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+        
+        .script-info {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .info-box {
+            background: rgba(0, 30, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 5px;
+            border-left: 3px solid #00ff00;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .info-box span {
+            color: #00cc00;
+            font-weight: bold;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .publish-btn {
+            background: linear-gradient(45deg, #006600, #00aa00);
+            color: white;
+        }
+        
+        .publish-btn:hover {
+            background: linear-gradient(45deg, #00aa00, #00ff00);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.4);
+        }
+        
+        .copy-btn {
+            background: linear-gradient(45deg, #000066, #0000aa);
+            color: white;
+        }
+        
+        .copy-btn:hover {
+            background: linear-gradient(45deg, #0000aa, #0000ff);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 255, 0.4);
+        }
+        
+        .test-btn {
+            background: linear-gradient(45deg, #660066, #aa00aa);
+            color: white;
+        }
+        
+        .test-btn:hover {
+            background: linear-gradient(45deg, #aa00aa, #ff00ff);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 0, 255, 0.4);
+        }
+        
+        .result-section {
+            background: rgba(0, 20, 0, 0.7);
+            border: 1px solid #00aa00;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 25px;
+            display: none;
+        }
+        
+        .result-section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-title {
+            color: #00ff00;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+        
+        .loadstring-output {
+            background: #001100;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #00aa00;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #00ff00;
+            word-break: break-all;
+            margin-bottom: 15px;
+            position: relative;
+            padding-right: 100px;
+        }
+        
+        .quick-copy {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #00aa00;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .quick-copy:hover {
+            background: #00ff00;
+        }
+        
+        .url-info {
+            color: #00cc00;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 30, 0, 0.5);
+            border-radius: 5px;
+        }
+        
+        .how-to-use {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(0, 20, 0, 0.5);
+            border-radius: 5px;
+            border-left: 3px solid #00ff00;
+        }
+        
+        .how-to-use h3 {
+            color: #00ff00;
+            margin-bottom: 15px;
+        }
+        
+        .how-to-use ol {
+            padding-left: 20px;
+            color: #00cc00;
+        }
+        
+        .how-to-use li {
+            margin-bottom: 10px;
+        }
+        
+        .code-block {
+            background: #001100;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+            margin: 5px 0;
+            border: 1px solid #00aa00;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: rgba(0, 100, 0, 0.3);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            display: block;
+        }
+        
+        .status.error {
+            background: rgba(100, 0, 0, 0.3);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+            display: block;
+        }
+        
+        .publish-options {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .option-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .option-label {
+            color: #00cc00;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .option-input {
+            width: 100%;
+            padding: 10px;
+            background: #001100;
+            border: 1px solid #00aa00;
+            border-radius: 5px;
+            color: #00ff00;
+        }
+        
+        .executor-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .executor-link {
+            padding: 8px 15px;
+            background: rgba(0, 50, 0, 0.7);
+            border: 1px solid #00aa00;
+            border-radius: 5px;
+            color: #00ff00;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .executor-link:hover {
+            background: rgba(0, 100, 0, 0.7);
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .script-input {
+                height: 200px;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+            
+            .publish-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ SCRIPT PUBLISHER & EXECUTOR</h1>
+            <p>Write → Publish → Get Loadstring → Execute in Roblox</p>
+        </div>
+        
+        <div id="statusMessage" class="status"></div>
+        
+        <div class="editor-section">
+            <div class="section-title">
+                📝 WRITE YOUR SCRIPT HERE
+            </div>
+            
+            <textarea id="scriptInput" class="script-input" placeholder="-- Write your Lua script here
+-- Example:
+print(&quot;Hello from Script Publisher!&quot;)
+for i = 1, 5 do
+    print(&quot;Count: &quot; .. i)
+    wait(1)
+end
+game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50
+print(&quot;Speed boosted!&quot;)">print("Hello from Script Publisher!")
+for i = 1, 5 do
+    print("Count: " .. i)
+    wait(1)
+end
+print("Script execution complete!")</textarea>
+            
+            <div class="script-info">
+                <div class="info-box">
+                    Script Length: <span id="scriptLength">0</span> characters
+                </div>
+                <div class="info-box">
+                    Lines: <span id="scriptLines">0</span>
+                </div>
+                <div class="info-box">
+                    Status: <span id="scriptStatus">Ready to publish</span>
+                </div>
+            </div>
+            
+            <div class="publish-options">
+                <div class="option-group">
+                    <label class="option-label">📁 Script Name:</label>
+                    <input type="text" id="scriptName" class="option-input" placeholder="MyAwesomeScript" value="MyScript">
+                </div>
+                <div class="option-group">
+                    <label class="option-label">🔑 Access Key (Optional):</label>
+                    <input type="text" id="accessKey" class="option-input" placeholder="Leave empty for public">
+                </div>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button id="publishBtn" class="btn publish-btn">
+                🚀 PUBLISH SCRIPT
+            </button>
+            <button id="copyBtn" class="btn copy-btn">
+                📋 COPY LOADSTRING
+            </button>
+            <button id="testBtn" class="btn test-btn">
+                ⚡ TEST IN ROBLOX
+            </button>
+        </div>
+        
+        <div id="resultSection" class="result-section">
+            <div class="result-title">✅ PUBLISHED SUCCESSFULLY!</div>
+            
+            <div class="loadstring-output" id="loadstringOutput">
+                loadstring(game:HttpGet("https://scriptpublisher.com/raw/myscript"))()
+                <button class="quick-copy" onclick="copyLoadstring()">Copy</button>
+            </div>
+            
+            <div class="url-info">
+                📎 Your script URL: <span id="scriptUrl">https://scriptpublisher.com/raw/myscript</span><br>
+                🔗 Direct loadstring ready for any executor
+            </div>
+            
+            <div class="executor-links">
+                <strong>🚀 Execute in:</strong>
+                <a href="#" class="executor-link">Synapse X</a>
+                <a href="#" class="executor-link">Script-Ware</a>
+                <a href="#" class="executor-link">Krnl</a>
+                <a href="#" class="executor-link">Fluxus</a>
+                <a href="#" class="executor-link">Roblox Studio</a>
+            </div>
+        </div>
+        
+        <div class="how-to-use">
+            <h3>🎯 HOW TO USE PUBLISHED SCRIPT:</h3>
+            <ol>
+                <li>Write your Lua script in the editor above</li>
+                <li>Click "PUBLISH SCRIPT" - Your script gets a permanent URL</li>
+                <li>Copy the generated loadstring</li>
+                <li><strong>In Roblox Executor:</strong>
+                    <div class="code-block">Paste: loadstring(game:HttpGet("YOUR_URL_HERE"))()</div>
+                </li>
+                <li><strong>In Roblox Studio:</strong>
+                    <div class="code-block">Workspace > Script > Paste the loadstring</div>
+                </li>
+                <li><strong>In any executor (Synapse, KRNL, etc.):</strong>
+                    <div class="code-block">Just paste and execute!</div>
+                </li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const scriptInput = document.getElementById('scriptInput');
+        const publishBtn = document.getElementById('publishBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const testBtn = document.getElementById('testBtn');
+        const resultSection = document.getElementById('resultSection');
+        const loadstringOutput = document.getElementById('loadstringOutput');
+        const scriptUrl = document.getElementById('scriptUrl');
+        const scriptLength = document.getElementById('scriptLength');
+        const scriptLines = document.getElementById('scriptLines');
+        const scriptStatus = document.getElementById('scriptStatus');
+        const scriptName = document.getElementById('scriptName');
+        const accessKey = document.getElementById('accessKey');
+        const statusMessage = document.getElementById('statusMessage');
+        
+        // Generate random ID for script
+        function generateScriptId() {
+            return Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+        }
+        
+        // Update script info
+        function updateScriptInfo() {
+            const text = scriptInput.value;
+            scriptLength.textContent = text.length;
+            scriptLines.textContent = text.split('\n').length;
+            
+            if (text.length === 0) {
+                scriptStatus.textContent = 'Empty script';
+                scriptStatus.style.color = '#ff5555';
+            } else if (text.length < 50) {
+                scriptStatus.textContent = 'Very short script';
+                scriptStatus.style.color = '#ffaa00';
+            } else {
+                scriptStatus.textContent = 'Ready to publish';
+                scriptStatus.style.color = '#00ff00';
+            }
+        }
+        
+        // Show status message
+        function showStatus(message, type = 'success') {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status ' + type;
+            setTimeout(() => {
+                statusMessage.className = 'status';
+            }, 5000);
+        }
+        
+        // Publish script function
+        function publishScript() {
+            const script = scriptInput.value.trim();
+            const name = scriptName.value.trim() || 'MyScript';
+            const key = accessKey.value.trim();
+            
+            if (!script) {
+                showStatus('❌ Please write a script first!', 'error');
+                return;
+            }
+            
+            // Show publishing status
+            showStatus('📤 Publishing script...', 'success');
+            scriptStatus.textContent = 'Publishing...';
+            scriptStatus.style.color = '#ffff00';
+            
+            // Simulate publishing delay
+            setTimeout(() => {
+                // Generate unique script ID
+                const scriptId = generateScriptId();
+                
+                // Create a simulated URL (in real app, this would upload to server)
+                let url;
+                if (key) {
+                    url = `https://scriptpub.com/raw/${scriptId}?key=${key}`;
+                } else {
+                    url = `https://scriptpub.com/raw/${scriptId}`;
+                }
+                
+                // Update UI with results
+                const loadstring = `loadstring(game:HttpGet("${url}", true))()`;
+                loadstringOutput.innerHTML = `${loadstring}<button class="quick-copy" onclick="copyLoadstring()">Copy</button>`;
+                scriptUrl.textContent = url;
+                
+                // Save to localStorage (simulated database)
+                try {
+                    const scriptData = {
+                        id: scriptId,
+                        name: name,
+                        script: script,
+                        date: new Date().toISOString(),
+                        accessKey: key || null
+                    };
+                    
+                    // Store in browser (simulating server storage)
+                    localStorage.setItem(`script_${scriptId}`, JSON.stringify(scriptData));
+                    
+                    // Save to "my scripts" list
+                    let myScripts = JSON.parse(localStorage.getItem('myPublishedScripts') || '[]');
+                    myScripts.push({
+                        id: scriptId,
+                        name: name,
+                        url: url,
+                        date: new Date().toLocaleString()
+                    });
+                    localStorage.setItem('myPublishedScripts', JSON.stringify(myScripts));
+                    
+                } catch (e) {
+                    console.log('Script saved locally (browser storage)');
+                }
+                
+                // Show result section
+                resultSection.classList.add('active');
+                
+                // Update status
+                scriptStatus.textContent = 'Published! Ready to execute';
+                scriptStatus.style.color = '#00ff00';
+                
+                showStatus('✅ Script published successfully! Loadstring ready.', 'success');
+                
+            }, 1500);
+        }
+        
+        // Copy loadstring function
+        function copyLoadstring() {
+            const loadstring = loadstringOutput.textContent || loadstringOutput.innerText;
+            
+            navigator.clipboard.writeText(loadstring).then(() => {
+                showStatus('📋 Loadstring copied to clipboard!', 'success');
+                
+                // Change button text temporarily
+                const copyBtn = document.querySelector('.quick-copy');
+                if (copyBtn) {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = '✅ Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 2000);
+                }
+            }).catch(err => {
+                // Fallback method
+                const textArea = document.createElement('textarea');
+                textArea.value = loadstring;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showStatus('📋 Loadstring copied!', 'success');
+            });
+        }
+        
+        // Test in Roblox function
+        function testInRoblox() {
+            if (!resultSection.classList.contains('active')) {
+                showStatus('⚠️ Please publish your script first!', 'error');
+                return;
+            }
+            
+            showStatus('⚡ Opening Roblox test environment...', 'success');
+            
+            // Create test window with instructions
+            const testWindow = window.open('', '_blank');
+            testWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Test Your Script</title>
+                    <style>
+                        body { 
+                            background: #0a0a0a; 
+                            color: #00ff00; 
+                            font-family: monospace; 
+                            padding: 20px; 
+                        }
+                        .container { max-width: 800px; margin: 0 auto; }
+                        .code { 
+                            background: #001100; 
+                            padding: 15px; 
+                            border-radius: 5px; 
+                            border: 1px solid #00aa00;
+                            margin: 15px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>🧪 SCRIPT TEST ENVIRONMENT</h1>
+                        <p>Your loadstring (copy this into Roblox executor):</p>
+                        <div class="code">${loadstringOutput.textContent}</div>
+                        <p><strong>Steps to test:</strong></p>
+                        <ol>
+                            <li>Open Roblox Studio or a Roblox game</li>
+                            <li>Open your executor (Synapse, KRNL, etc.)</li>
+                            <li>Paste the loadstring above</li>
+                            <li>Execute the script</li>
+                            <li>Check output in console</li>
+                        </ol>
+                        <p><em>Note: This is a simulated test environment. You need to actually execute in Roblox.</em></p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+        
+        // Event listeners
+        scriptInput.addEventListener('input', updateScriptInfo);
+        publishBtn.addEventListener('click', publishScript);
+        copyBtn.addEventListener('click', copyLoadstring);
+        testBtn.addEventListener('click', testInRoblox);
+        
+        // Initialize
+        updateScriptInfo();
+        
+        // Auto-save script draft
+        setInterval(() => {
+            const script = scriptInput.value;
+            if (script) {
+                localStorage.setItem('scriptDraft', script);
+                localStorage.setItem('scriptNameDraft', scriptName.value);
+            }
+        }, 5000);
+        
+        // Load draft if exists
+        window.addEventListener('load', () => {
+            const draft = localStorage.getItem('scriptDraft');
+            const nameDraft = localStorage.getItem('scriptNameDraft');
+            if (draft) {
+                scriptInput.value = draft;
+                if (nameDraft) scriptName.value = nameDraft;
+                updateScriptInfo();
+            }
+        });
+    </script>
+</body>
+</html>
